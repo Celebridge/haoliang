@@ -50,7 +50,7 @@ haoliang slice "为什么 GC 停顿要等线程到达 safepoint？" --domain jvm
 
 ## 连接 Codex
 
-在 Codex 的 `config.toml` 加入下面的 MCP 配置，替换绝对路径后开启新对话。
+在 Codex 的 `~/.codex/config.toml` 加入下面的配置，把示例路径替换成克隆目录的绝对路径。重启 Codex，在新对话中输入 `/mcp`，确认 `haoliang` 已连接。 [Codex MCP 配置文档](https://developers.openai.com/codex/mcp)
 
 ```toml
 [mcp_servers.haoliang]
