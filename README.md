@@ -1,39 +1,52 @@
 # 濠梁 · Haoliang
 
+**让 AI 从你已经懂的地方讲起。**
+
+AI 解释技术问题时总在堆术语，让人觉得它「不说人话」？濠梁记录你对技术术语的掌握程度，让助手在回答前知道哪些概念可以直接用，哪些需要先解释。它开源、本地优先，可以通过模型上下文协议（MCP）接入 Codex。
+
+Haoliang is an open-source, local-first MCP server for personalized technical explanations. It gives AI assistants a knowledge profile across chats, so they can start from what you know and flag undefined jargon.
+
+[看个例子](#濠梁能解决什么问题) · [试一下](#安装与体验) · [接入 Codex](#连接-codex)
+
 ## 濠梁能解决什么问题
 
-AI 回答技术问题时，常把几个术语或推理前提当作常识。一个没讲清的概念，就可能让你跟不上后面的解释。濠梁把与你当前问题相关的知识提供给助手，让它能从你已经懂的地方讲起。
+假设你熟悉垃圾回收（GC），但没学过安全点。你问「为什么 GC 停顿要等线程到达 safepoint？」
 
-- **回答默认你懂它的术语。** 写完后检查术语第一次出现时有没有解释，标出可能让你卡住的词。需要时，可以在原文里插入简短释义。
-- **解释深度和你的实际背景对不上。** 一个熟悉数据库索引的人也可能刚开始学 Java 虚拟机（JVM）。助手可以按这次的问题查你对相关术语的掌握程度，再决定从哪一步讲起。
-- **每开一个新对话都要重交代背景。** 术语和证据保存在同一本本地账本。接入濠梁的助手可以在新对话里按需查询相关词条。
+- **直接回答示例**　“GC 暂停应用线程前，要等线程到达 safepoint。”
+- **参考读者画像的回答示例**　“safepoint（安全点）是线程可以被安全暂停的位置。垃圾回收要暂停线程时，还在运行的线程得先走到这样的位置，所以会有一段等待。”
 
-比如，你已经了解垃圾回收（GC），但还没接触过安全点。你问「为什么 GC 停顿要等线程到达安全点？」时，助手可以先解释安全点，再讲为什么要等。
+这个例子里，GC 可以当作已知前提，safepoint 需要先解释。濠梁也能在草稿写完后标出漏讲的术语，供助手按需补一句。掌握度保存在本地账本，开新对话也可以继续用。
 
 ## 工作方式
 
-濠梁是一个本地优先的读者模型。它用术语证据记录你对概念的掌握程度，在 AI 回答之前提供与问题有关的词条，在回答之后标出读者可能需要解释的术语。
-
 - 每张术语卡保存证据、所属领域和衰减参数，熟悉度在读取时按配置计算。
-- `slice` 返回本题相关知识。领域优先用于术语消歧，独立的跨领域词仍可匹配。
+- 回答前，`slice` 只返回本题相关词条。领域用于优先匹配同名词的不同含义。
 - `annotate` 检查术语在首次正文出现时是否给出解释。可选的 `revise` 只在原文插入术语释义。
 - CLI 与 MCP 使用同一个本地 JSONL 账本。MCP 默认开启只读模式。
 
 ## 安装与体验
 
-需要 Python 3.10 或更高版本。在源码目录执行：
+需要 Python 3.10 或更高版本和 `uv`。下面用一个独立的演示账本复现上面的 GC 例子，无需模型 API 密钥。
 
 ```bash
+git clone https://github.com/Celebridge/haoliang.git
+cd haoliang
 uv venv
 uv pip install -e ".[mcp]"
 source .venv/bin/activate
 
-haoliang propose "安全点" --domain jvm --store var/reader-demo
-haoliang slice "JVM 为什么要等线程到安全点" --domain jvm --store var/reader-demo
-haoliang annotate "JVM 会等线程到安全点。" --domain jvm --store var/reader-demo
+haoliang observe GC --kind explained --domain jvm --store var/reader-demo
+haoliang propose safepoint --domain jvm --store var/reader-demo
+haoliang slice "为什么 GC 停顿要等线程到达 safepoint？" --domain jvm --store var/reader-demo
 ```
 
-`propose` 新建待积累证据的词条。可以用 [Java 后端示例问卷](docs/onboarding/README.md) 建立自己的起始画像。词条、配置和默认层级的格式分别见 `schema/term.schema.json` 与 `config/reader.json`。
+首次运行，最后一条命令会给出这条建议：
+
+```text
+先定义：safepoint；可以直接用：GC
+```
+
+演示把 GC 设为「会用」，给 safepoint 建一张还没积累证据的卡。想建立自己的画像，可以用 [Java 后端示例问卷](docs/onboarding/README.md) 起步。卡片格式与默认熟悉度层级见 `schema/term.schema.json` 和 `config/reader.json`。
 
 ## 连接 Codex
 
@@ -46,7 +59,11 @@ args = ["--store", "/path/to/haoliang/var/reader-demo"]
 enabled_tools = ["haoliang_brief", "haoliang_domain_profile"]
 ```
 
-`haoliang_brief` 用于回答前的一次问题相关查询。`haoliang_domain_profile` 用于查看一个领域的整体画像。
+在新对话中用下面这句话试一次。看到 `haoliang_brief` 被调用，就可以检查它是否将 GC 和 safepoint 分别归入已知和需解释的词。
+
+> 先用 haoliang_brief 看我对本题术语的掌握程度，再解释为什么 GC 停顿要等线程到达 safepoint。
+
+`haoliang_domain_profile` 用于查看一个领域的整体画像。想让助手平时也先查画像，可以把上面的调用要求写入 Codex 的个人指令。
 
 ## 数据与模型调用
 
