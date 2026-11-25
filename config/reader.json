@@ -1,0 +1,82 @@
+{
+  "levels": [
+    {
+      "id": "unknown",
+      "label": "不知道",
+      "min_knowledge": 0.0,
+      "explain": "define"
+    },
+    {
+      "id": "heard",
+      "label": "听过",
+      "min_knowledge": 0.25,
+      "explain": "define_brief"
+    },
+    {
+      "id": "usable",
+      "label": "会用",
+      "min_knowledge": 0.6,
+      "explain": "none"
+    },
+    {
+      "id": "explainable",
+      "label": "能讲",
+      "min_knowledge": 0.9,
+      "explain": "reason"
+    }
+  ],
+  "evidence_weights": {
+    "asked": -0.3,
+    "self_report_unknown": -0.3,
+    "quiz_wrong": -0.5,
+    "self_report": 0.45,
+    "no_question": 0.1,
+    "labeled_known": 0.9,
+    "used": 0.3,
+    "quiz_correct": 0.6,
+    "applied": 0.7,
+    "explained": 0.8,
+    "corrected": 0.8
+  },
+  "promotion": {
+    "min_positive_evidence": 3,
+    "min_distinct_days": 2,
+    "min_strong_evidence": 1,
+    "strong_weight": 0.6,
+    "negative_cooldown_days": 7
+  },
+  "decay": {
+    "initial_stability_days": 3.0,
+    "growth_factor": 1.8,
+    "shrink_factor": 0.5,
+    "retention_threshold": 0.7,
+    "min_stability_days": 0.5,
+    "baseline_stability_days": 45.0
+  },
+  "retrieval": {
+    "domain_boost": 0.1,
+    "domain_confidence_terms": 5.0
+  },
+  "revision": {
+    "max_terms": 5,
+    "max_revisions_per_turn": 1,
+    "max_growth_chars": 240,
+    "model": "deepseek-chat",
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "temperature": 0.1,
+    "max_tokens": 1600
+  },
+  "jargon": {
+    "enabled": false,
+    "model": "deepseek-chat",
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "DEEPSEEK_API_KEY",
+    "temperature": 0.0,
+    "max_tokens": 2400,
+    "max_candidates": 50,
+    "confidence_threshold": 0.6,
+    "review_as": "skip",
+    "reader_profile": ""
+  }
+}

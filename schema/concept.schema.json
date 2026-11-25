@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Celebridge/haoliang/schema/concept.schema.json",
+  "title": "Haoliang Concept Card",
+  "type": "object",
+  "required": [
+    "id",
+    "kind",
+    "concept",
+    "domain",
+    "label",
+    "members",
+    "status",
+    "author",
+    "sensitivity"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^c_[0-9]{4,6}$" },
+    "kind": { "const": "concept" },
+    "concept": { "type": "string", "minLength": 1 },
+    "domain": { "type": "string", "minLength": 1 },
+    "label": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string" },
+    "members": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^t_[0-9]{4,6}$" },
+      "minItems": 1
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^c_[0-9]{4,6}$" }
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "target"],
+        "properties": {
+          "type": {
+            "enum": ["confused_with", "part_of", "used_in", "learned_from"]
+          },
+          "target": { "type": "string", "minLength": 1 },
+          "note": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "status": { "enum": ["proposal", "canon"] },
+    "author": { "enum": ["player", "ai-proposed", "imported"] },
+    "sensitivity": { "enum": ["private", "sensitive"] },
+    "created_at": { "type": ["string", "null"] },
+    "updated_at": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

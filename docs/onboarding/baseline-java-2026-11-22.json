@@ -1,0 +1,410 @@
+{
+  "version": 1,
+  "created": "2026-11-22",
+  "purpose": "Java 后端读者模型基线问卷。逐组勾选，不需要打字。",
+  "scale": [
+    {
+      "key": "0",
+      "level": "unknown",
+      "label": "不知道",
+      "meaning": "没听过，或听过但完全说不清"
+    },
+    {
+      "key": "1",
+      "level": "heard",
+      "label": "听过",
+      "meaning": "知道这个词，能说一句大概是干什么的，但没实践过"
+    },
+    {
+      "key": "2",
+      "level": "usable",
+      "label": "会用",
+      "meaning": "日常写代码/排查会用到，不需要查基础资料"
+    },
+    {
+      "key": "3",
+      "level": "explainable",
+      "label": "能讲",
+      "meaning": "能给别人讲清原理、边界和坑"
+    }
+  ],
+  "how_to_answer": "每组一行一个词，填 0/1/2/3。不确定就填 1，宁可低估不要高估。",
+  "groups": [
+    {
+      "id": "java",
+      "title": "Java 语言与并发",
+      "terms": [
+        {
+          "term": "Java 语法",
+          "hint": "集合、泛型、异常、Stream"
+        },
+        {
+          "term": "HashMap",
+          "hint": "结构、扩容、为什么 8 转红黑树"
+        },
+        {
+          "term": "ConcurrentHashMap",
+          "hint": "分段/CAS、size 语义"
+        },
+        {
+          "term": "线程池",
+          "hint": "七参数、拒绝策略、队列选择"
+        },
+        {
+          "term": "synchronized",
+          "hint": "锁升级、对象头"
+        },
+        {
+          "term": "volatile",
+          "hint": "可见性、禁止重排"
+        },
+        {
+          "term": "CAS",
+          "hint": "ABA、自旋代价"
+        },
+        {
+          "term": "AQS",
+          "hint": "state、CLH 队列、Condition"
+        },
+        {
+          "term": "ThreadLocal",
+          "hint": "内存泄漏、线程池污染"
+        },
+        {
+          "term": "CompletableFuture",
+          "hint": "组合、异常处理"
+        },
+        {
+          "term": "JMM",
+          "hint": "happens-before"
+        },
+        {
+          "term": "GC 调优",
+          "hint": "参数、日志分析、停顿优化"
+        }
+      ]
+    },
+    {
+      "id": "jvm",
+      "title": "JVM",
+      "terms": [
+        {
+          "term": "内存区域",
+          "hint": "堆、栈、方法区、元空间"
+        },
+        {
+          "term": "垃圾回收",
+          "hint": "分代、回收算法"
+        },
+        {
+          "term": "G1",
+          "hint": "Region、Mixed GC、停顿预测"
+        },
+        {
+          "term": "Full GC",
+          "hint": "触发条件、排查"
+        },
+        {
+          "term": "类加载",
+          "hint": "加载-验证-准备-解析-初始化"
+        },
+        {
+          "term": "双亲委派",
+          "hint": "ClassLoader 继承结构"
+        },
+        {
+          "term": "JIT",
+          "hint": "C1/C2、内联、逃逸分析"
+        },
+        {
+          "term": "safepoint",
+          "hint": "STW 与安全点"
+        },
+        {
+          "term": "字节码",
+          "hint": "class 文件结构、ASM"
+        },
+        {
+          "term": "jmap / jstack",
+          "hint": "dump 与线程栈"
+        },
+        {
+          "term": "arthas",
+          "hint": "线上排查工具"
+        }
+      ]
+    },
+    {
+      "id": "spring",
+      "title": "Spring / Spring Boot",
+      "terms": [
+        {
+          "term": "IOC",
+          "hint": "容器、BeanDefinition"
+        },
+        {
+          "term": "AOP",
+          "hint": "代理、切点、通知"
+        },
+        {
+          "term": "Bean 生命周期",
+          "hint": "实例化到销毁"
+        },
+        {
+          "term": "循环依赖",
+          "hint": "三级缓存"
+        },
+        {
+          "term": "事务传播",
+          "hint": "REQUIRED / REQUIRES_NEW / NESTED"
+        },
+        {
+          "term": "事务失效",
+          "hint": "自调用、异常吞掉、非 public"
+        },
+        {
+          "term": "Spring MVC",
+          "hint": "DispatcherServlet、参数绑定"
+        },
+        {
+          "term": "拦截器 / Filter",
+          "hint": "执行顺序、适用场景"
+        },
+        {
+          "term": "Spring Boot 自动配置",
+          "hint": "SPI、条件注解"
+        },
+        {
+          "term": "Spring Cloud",
+          "hint": "Nacos、OpenFeign、Gateway"
+        },
+        {
+          "term": "分布式事务",
+          "hint": "Seata、TCC、本地消息表"
+        },
+        {
+          "term": "Spring Security",
+          "hint": "过滤器链、认证授权"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "title": "MySQL / 数据库",
+      "terms": [
+        {
+          "term": "SQL",
+          "hint": "多表 join、子查询、聚合"
+        },
+        {
+          "term": "索引",
+          "hint": "B+ 树、聚簇/二级索引"
+        },
+        {
+          "term": "联合索引",
+          "hint": "列顺序、最左前缀"
+        },
+        {
+          "term": "回表",
+          "hint": "二级索引到聚簇索引"
+        },
+        {
+          "term": "覆盖索引",
+          "hint": "避免回表"
+        },
+        {
+          "term": "最左前缀",
+          "hint": "联合索引的列顺序规则"
+        },
+        {
+          "term": "explain",
+          "hint": "type、key、rows、Extra"
+        },
+        {
+          "term": "事务隔离级别",
+          "hint": "RU/RC/RR/SERIALIZABLE"
+        },
+        {
+          "term": "MVCC",
+          "hint": "Read View、undo log"
+        },
+        {
+          "term": "间隙锁",
+          "hint": "next-key lock、幻读"
+        },
+        {
+          "term": "慢 SQL 优化",
+          "hint": "定位与改写"
+        },
+        {
+          "term": "分库分表",
+          "hint": "ShardingSphere、路由与聚合"
+        },
+        {
+          "term": "主从复制",
+          "hint": "binlog、延迟、读写分离"
+        },
+        {
+          "term": "MyBatis",
+          "hint": "动态 SQL、resultMap、一级/二级缓存"
+        }
+      ]
+    },
+    {
+      "id": "redis",
+      "title": "Redis / 缓存",
+      "terms": [
+        {
+          "term": "Redis 数据类型",
+          "hint": "String/Hash/List/Set/ZSet"
+        },
+        {
+          "term": "缓存穿透",
+          "hint": "空值缓存、布隆过滤器"
+        },
+        {
+          "term": "缓存击穿",
+          "hint": "互斥重建、逻辑过期"
+        },
+        {
+          "term": "缓存雪崩",
+          "hint": "TTL 抖动、多级缓存"
+        },
+        {
+          "term": "分布式锁",
+          "hint": "SET NX PX、续期、fencing"
+        },
+        {
+          "term": "RDB / AOF",
+          "hint": "持久化选择与代价"
+        },
+        {
+          "term": "主从 / 哨兵 / Cluster",
+          "hint": "高可用方案"
+        },
+        {
+          "term": "缓存一致性",
+          "hint": "先删还是后删、延迟双删"
+        },
+        {
+          "term": "热 key / 大 key",
+          "hint": "识别与治理"
+        }
+      ]
+    },
+    {
+      "id": "mq",
+      "title": "消息队列",
+      "terms": [
+        {
+          "term": "RocketMQ",
+          "hint": "架构、刷盘、重试"
+        },
+        {
+          "term": "Kafka",
+          "hint": "分区、消费组、offset"
+        },
+        {
+          "term": "消息丢失",
+          "hint": "三段式可靠性"
+        },
+        {
+          "term": "重复消费",
+          "hint": "幂等设计"
+        },
+        {
+          "term": "顺序消息",
+          "hint": "队列选择、单线程消费"
+        },
+        {
+          "term": "死信队列",
+          "hint": "重试上限与兜底"
+        },
+        {
+          "term": "事务消息",
+          "hint": "半消息、回查"
+        }
+      ]
+    },
+    {
+      "id": "k8s",
+      "title": "K8s / 运维",
+      "terms": [
+        {
+          "term": "Pod",
+          "hint": "最小调度单位、生命周期"
+        },
+        {
+          "term": "Deployment / Service",
+          "hint": "滚动更新、服务发现"
+        },
+        {
+          "term": "kubectl",
+          "hint": "常用排查命令"
+        },
+        {
+          "term": "ConfigMap / Secret",
+          "hint": "配置注入"
+        },
+        {
+          "term": "探针",
+          "hint": "liveness / readiness / startup"
+        },
+        {
+          "term": "HPA",
+          "hint": "基于指标的扩缩容"
+        },
+        {
+          "term": "Operator / CRD",
+          "hint": "自定义控制器"
+        },
+        {
+          "term": "Docker",
+          "hint": "镜像、分层、Dockerfile"
+        },
+        {
+          "term": "Linux",
+          "hint": "top/grep/awk/网络排查"
+        },
+        {
+          "term": "Shell",
+          "hint": "脚本编写"
+        },
+        {
+          "term": "CI/CD",
+          "hint": "Jenkins、GitLab CI"
+        }
+      ]
+    },
+    {
+      "id": "tool",
+      "title": "工程工具",
+      "terms": [
+        {
+          "term": "Git",
+          "hint": "分支、merge/rebase、冲突"
+        },
+        {
+          "term": "Maven / Gradle",
+          "hint": "依赖冲突、多模块"
+        },
+        {
+          "term": "JUnit / Mockito",
+          "hint": "单测写法"
+        },
+        {
+          "term": "日志框架",
+          "hint": "SLF4J、Logback、MDC"
+        },
+        {
+          "term": "接口文档",
+          "hint": "Swagger / Knife4j"
+        },
+        {
+          "term": "压力测试",
+          "hint": "JMeter、wrk、P99"
+        }
+      ]
+    }
+  ]
+}
