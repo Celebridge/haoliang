@@ -69,6 +69,8 @@ enabled_tools = ["haoliang_brief", "haoliang_domain_profile"]
 
 本地账本默认放在 `var/`，Git 忽略该目录。切片和不带模型判定的术语检查在本地运行。打开模型判定或调用独立改稿时，草稿会发给所配置的模型端点。这两种能力需要安装 `haoliang[openai]` 并配置对应的服务。
 
+MCP 在 `--store` 目录下的 `mcp-activity.jsonl` 追加启动和调用记录。日志包含工具名、耗时、结果及命中或写入数量。查询、草稿和证据原文留在原有数据路径。
+
 ## 开发验证
 
 ```bash

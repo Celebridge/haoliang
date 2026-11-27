@@ -11,8 +11,13 @@ Read tools are enabled by default. Write tools require `--allow-write`.
 from __future__ import annotations
 
 import argparse
+import json
+import logging
 import os
+from datetime import datetime, timezone
+from functools import wraps
 from pathlib import Path
+from time import perf_counter
 
 from .reader_tools import ReaderService
 
@@ -40,15 +45,76 @@ def create_server(
         config_path=config_path,
     )
     server = FastMCP("haoliang")
+    activity_path = Path(store_dir) / "mcp-activity.jsonl"
+    log_failed = False
 
-    @server.tool(name="haoliang_brief")
+    def record_activity(event: str, **fields) -> None:
+        nonlocal log_failed
+        entry = {
+            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds"),
+            "event": event,
+            "pid": os.getpid(),
+            "write_enabled": allow_write,
+            **fields,
+        }
+        line = (json.dumps(entry, separators=(",", ":")) + "\n").encode("utf-8")
+        try:
+            activity_path.parent.mkdir(parents=True, exist_ok=True)
+            # One append per event keeps records separate across MCP processes.
+            fd = os.open(activity_path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+            with os.fdopen(fd, "wb", buffering=0) as stream:
+                stream.write(line)
+        except OSError as exc:
+            if not log_failed:
+                logging.getLogger(__name__).warning(
+                    "Haoliang MCP activity log unavailable (%s)", type(exc).__name__,
+                )
+                log_failed = True
+
+    def logged_tool(name: str):
+        def register(handler):
+            @wraps(handler)
+            def logged(*args, **kwargs):
+                start = perf_counter()
+                fields = {"status": "error"}
+                try:
+                    result = handler(*args, **kwargs)
+                except Exception as exc:
+                    if isinstance(exc, PermissionError):
+                        fields["status"] = "denied"
+                    fields["error_type"] = type(exc).__name__
+                    raise
+                else:
+                    fields["status"] = "ok"
+                    if name == "haoliang_brief":
+                        fields["matched_terms"] = result["coverage"]["terms"]
+                    elif name == "haoliang_observe":
+                        fields["evidence_written"] = 1
+                    elif name == "haoliang_annotate":
+                        judge = result["judge"]
+                        fields["reviews_written"] = judge["reviews_written"]
+                        fields["local_terms_written"] = judge["local_terms_written"]
+                    return result
+                finally:
+                    record_activity(
+                        "tool_call",
+                        tool=name,
+                        duration_ms=round((perf_counter() - start) * 1000, 3),
+                        **fields,
+                    )
+
+            return server.tool(name=name)(logged)
+
+        return register
+
+    @logged_tool("haoliang_brief")
     def haoliang_brief(
         query: str,
         domain: str | None = None,
         domain_mode: str = "soft",
         max_terms: int = 12,
     ) -> dict:
-        """Read the reader slice: known / uncertain / unknown terms before writing."""
+        """Check the reader's term familiarity before answering this query."""
         return service.brief(
             query,
             domain=domain,
@@ -56,16 +122,12 @@ def create_server(
             max_terms=max_terms,
         )
 
-    @server.tool(name="haoliang_domain_profile")
+    @logged_tool("haoliang_domain_profile")
     def haoliang_domain_profile(domain: str, max_terms: int = 12) -> dict:
-        """Read a compact domain-wide profile before writing.
-
-        Use this for baseline depth; use haoliang_brief for the query-specific
-        terms.
-        """
+        """Get domain-wide familiarity to set explanation depth."""
         return service.domain_profile(domain, max_terms=max_terms)
 
-    @server.tool(name="haoliang_annotate")
+    @logged_tool("haoliang_annotate")
     def haoliang_annotate(
         text: str,
         domain: str | None = None,
@@ -74,9 +136,9 @@ def create_server(
         record_local_terms: bool | None = None,
         project: str | None = None,
     ) -> dict:
-        """Lint a draft; optionally judge and write pending/local terms.
+        """Check a draft for undefined terms and internal jargon leaks.
 
-        `leaks` in the reply lists harness words that leaked into the draft.
+        Write mode enables both record_* flags by default.
         """
         return service.annotate(
             text,
@@ -93,7 +155,7 @@ def create_server(
             project=project,
         )
 
-    @server.tool(name="haoliang_revise")
+    @logged_tool("haoliang_revise")
     def haoliang_revise(
         text: str,
         domain: str | None = None,
@@ -103,7 +165,7 @@ def create_server(
         record_local_terms: bool | None = None,
         project: str | None = None,
     ) -> dict:
-        """Run one isolated editor pass over undefined terms."""
+        """Define missing terms in one draft pass. Writes are opt-in."""
         # revise is documented as a read tool. Writes stay opt-in so one
         # editor call cannot create pending reviews as a side effect.
         return service.revise(
@@ -120,7 +182,7 @@ def create_server(
             project=project,
         )
 
-    @server.tool(name="haoliang_observe")
+    @logged_tool("haoliang_observe")
     def haoliang_observe(
         term: str,
         domain: str,
@@ -129,10 +191,9 @@ def create_server(
         source: str = "",
         scope: str = "domain",
     ) -> dict:
-        """Record one domain-term observation. Requires --allow-write.
+        """Log observed term evidence with scope="domain".
 
-        Allowed kinds: asked / used / no_question / applied / explained /
-        corrected. Self-reports and gold labels go through pending_resolve.
+        kind is asked, used, no_question, applied, explained, or corrected.
         """
         return service.observe(
             term,
@@ -143,21 +204,21 @@ def create_server(
             scope=scope,
         )
 
-    @server.tool(name="haoliang_propose")
+    @logged_tool("haoliang_propose")
     def haoliang_propose(
         term: str,
         domain: str,
         aliases: list[str] | None = None,
     ) -> dict:
-        """Create a proposal term card. Never writes canon."""
+        """Propose a domain term card without evidence."""
         return service.propose(term, domain, aliases=aliases)
 
-    @server.tool(name="haoliang_pending_list")
+    @logged_tool("haoliang_pending_list")
     def haoliang_pending_list() -> list[dict]:
-        """List cards with unresolved pending reviews."""
+        """List pending reviews with card IDs."""
         return service.pending_list()
 
-    @server.tool(name="haoliang_pending_resolve")
+    @logged_tool("haoliang_pending_resolve")
     def haoliang_pending_resolve(
         term_id: str,
         action: str,
@@ -166,9 +227,9 @@ def create_server(
         note: str = "",
         confirmed_by: str = "",
     ) -> dict:
-        """Resolve a pending review: known / unknown / archive.
+        """Resolve a review or archive a card.
 
-        `confirmed_by="user"` is required for known/unknown, not archive.
+        For known or unknown, require explicit user confirmation and confirmed_by="user".
         """
         return service.pending_resolve(
             term_id,
@@ -179,7 +240,7 @@ def create_server(
             confirmed_by=confirmed_by,
         )
 
-    @server.tool(name="haoliang_glossary_add")
+    @logged_tool("haoliang_glossary_add")
     def haoliang_glossary_add(
         term: str,
         scope: str,
@@ -187,7 +248,7 @@ def create_server(
         definition: str = "",
         reason: str = "",
     ) -> dict:
-        """Add a project/model term to the local glossary, not the reader ledger."""
+        """Add an internal glossary term with scope "project" or "model"."""
         return service.glossary_add(
             term,
             scope,
@@ -196,11 +257,12 @@ def create_server(
             reason=reason,
         )
 
-    @server.tool(name="haoliang_glossary_list")
+    @logged_tool("haoliang_glossary_list")
     def haoliang_glossary_list(project: str | None = None) -> list[dict]:
-        """List project/model local terms."""
+        """List local glossary terms, optionally filtered by project."""
         return service.glossary_list(project)
 
+    record_activity("server_start")
     return server
 
 
